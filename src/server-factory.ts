@@ -1,12 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import {
-  listMyRepos,
-  listOpenIssues,
-  listOpenPullRequests,
-} from "./github.js";
+import { createGithubClient } from "./github.js";
 
-export function createGithubMcpServer(): McpServer {
+export function createGithubMcpServer(githubToken: string): McpServer {
+  const github = createGithubClient(githubToken);
+
   const server = new McpServer({
     name: "mcp",
     version: "1.0.0",
@@ -28,7 +26,7 @@ export function createGithubMcpServer(): McpServer {
       }),
     },
     async ({ limit }) => {
-      const text = await listMyRepos(limit ?? 10);
+      const text = await github.listMyRepos(limit ?? 10);
       return {
         content: [{ type: "text" as const, text }],
       };
@@ -52,7 +50,7 @@ export function createGithubMcpServer(): McpServer {
       }),
     },
     async ({ owner, repo, limit }) => {
-      const text = await listOpenIssues(owner, repo, limit ?? 20);
+      const text = await github.listOpenIssues(owner, repo, limit ?? 20);
       return {
         content: [{ type: "text" as const, text }],
       };
@@ -76,7 +74,7 @@ export function createGithubMcpServer(): McpServer {
       }),
     },
     async ({ owner, repo, limit }) => {
-      const text = await listOpenPullRequests(owner, repo, limit ?? 20);
+      const text = await github.listOpenPullRequests(owner, repo, limit ?? 20);
       return {
         content: [{ type: "text" as const, text }],
       };
@@ -84,4 +82,16 @@ export function createGithubMcpServer(): McpServer {
   );
 
   return server;
+}
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is not set. Add it to your .env file.`);
+  }
+  return value;
+}
+
+export function createGithubMcpServerFromEnv(): McpServer {
+  return createGithubMcpServer(requireEnv("GITHUB_TOKEN"));
 }

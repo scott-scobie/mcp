@@ -5,12 +5,12 @@ import {
   localhostOriginValidation,
   toNodeHandler,
 } from "@modelcontextprotocol/node";
-import { createGithubMcpServer } from "./server-factory.js";
+import { createGithubMcpServerFromEnv } from "./server-factory.js";
 
 const port = Number(process.env.PORT ?? 3000);
 const host = "127.0.0.1";
 
-const handler = createMcpHandler(() => createGithubMcpServer());
+const handler = createMcpHandler(() => createGithubMcpServerFromEnv());
 const nodeHandler = toNodeHandler(handler);
 const validateHost = localhostHostValidation();
 const validateOrigin = localhostOriginValidation();
